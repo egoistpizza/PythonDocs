@@ -11,6 +11,8 @@
 Yet Another YouTube Video Downloader Script - Playlist Downloader ---> YAYVDS-PD
 """
 
+#TODO: High Resolution indirme seçeneği ekle. (Kullanıcıya bağlı)
+
 import os
 from pytube import Playlist
 from tqdm import tqdm

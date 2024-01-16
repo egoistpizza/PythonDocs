@@ -11,12 +11,49 @@
 Yet Another YouTube Video Downloader Script - Playlist Downloader ---> YAYVDS-PD
 """
 
-from pytube import YouTube,Playlist
+import os
+from pytube import Playlist
+from tqdm import tqdm
+import logging
 
-p = Playlist("YouTube Playlist Link Here")
+# Set up the log file
+logging.basicConfig(filename='yayvds_pd.log', level=logging.INFO)
 
-print(f'Downloading: {p.title}')
+def download_video(video, path_to_download, counter):
+    try:
+        print(f'Downloading: {video.title}')
+        out_file = video.streams.first().download(output_path=path_to_download)
+        new_file_name = f'{path_to_download}\\{counter}-{os.path.splitext(os.path.basename(out_file))[0]}.mp4'
+        os.rename(out_file, new_file_name)
+        logging.info(f"Downloaded: {video.title}")
+    except Exception as e:
+        logging.error(f"Error downloading {video.title}: {e}")
 
-for video in p.videos:
-    video.streams.first().download()
-    
+def download_playlist(playlist_url, download_path):
+    try:
+        p = Playlist(playlist_url)
+        counter = 1
+
+        for video in tqdm(p.videos, desc="Downloading Playlist"):
+            download_video(video, download_path, counter)
+            counter += 1
+
+        len_of_dir = len([name for name in os.listdir(download_path) if os.path.isfile(os.path.join(download_path, name))])
+
+        if len(p) == len_of_dir:
+            print(f"{len_of_dir}/{len(p)} video(s) has been successfully saved to directory {download_path}.")
+        elif len(p) != len_of_dir and len_of_dir != 0:
+            print(f"{len_of_dir}/{len(p)} video(s) has been successfully saved to directory {download_path}. Some videos are missing.")
+        else:
+            print(f"Something went wrong.")
+    except KeyboardInterrupt:
+        print("Download interrupted by the user.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        logging.error(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    playlist_url = input("Enter the Playlist URL: ")
+    download_path = input("Enter the download directory: ")
+
+    download_playlist(playlist_url, download_path)

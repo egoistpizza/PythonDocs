@@ -11,8 +11,6 @@
 Yet Another YouTube Video Downloader Script - Playlist Downloader ---> YAYVDS-PD
 """
 
-#TODO: High Resolution indirme seçeneği ekle. (Kullanıcıya bağlı)
-
 import os
 from pytube import Playlist
 from tqdm import tqdm
@@ -21,23 +19,28 @@ import logging
 # Set up the log file
 logging.basicConfig(filename='yayvds_pd.log', level=logging.INFO)
 
-def download_video(video, path_to_download, counter):
+def download_video(video, path_to_download, counter, resolution=None):
     try:
         print(f'Downloading: {video.title}')
-        out_file = video.streams.first().download(output_path=path_to_download)
+        
+        # Retrieve streams with different resolution
+        streams = video.streams.filter(res=resolution, file_extension="mp4").first()
+        out_file = streams.download(output_path=path_to_download)
+        
         new_file_name = f'{path_to_download}\\{counter}-{os.path.splitext(os.path.basename(out_file))[0]}.mp4'
         os.rename(out_file, new_file_name)
+        
         logging.info(f"Downloaded: {video.title}")
     except Exception as e:
         logging.error(f"Error downloading {video.title}: {e}")
 
-def download_playlist(playlist_url, download_path):
+def download_playlist(playlist_url, download_path, resolution=None):
     try:
         p = Playlist(playlist_url)
         counter = 1
 
         for video in tqdm(p.videos, desc="Downloading Playlist"):
-            download_video(video, download_path, counter)
+            download_video(video, download_path, counter, resolution)
             counter += 1
 
         len_of_dir = len([name for name in os.listdir(download_path) if os.path.isfile(os.path.join(download_path, name))])
@@ -57,5 +60,6 @@ def download_playlist(playlist_url, download_path):
 if __name__ == "__main__":
     playlist_url = input("Enter the Playlist URL: ")
     download_path = input("Enter the download directory: ")
+    resolution = input("Enter the desired resolution (optional): ")
 
-    download_playlist(playlist_url, download_path)
+    download_playlist(playlist_url, download_path, resolution)
